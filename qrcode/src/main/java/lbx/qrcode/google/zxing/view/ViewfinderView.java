@@ -127,7 +127,7 @@ public final class ViewfinderView extends View {
         labelText = array.getString(R.styleable.ViewfinderView_label_text);
         labelTextPosition = array.getInt(R.styleable.ViewfinderView_label_text_position, 0);
         mFrameOffset = (int) array.getDimension(R.styleable.ViewfinderView_frame_offset, 0);
-        labelTextSize = array.getFloat(R.styleable.ViewfinderView_label_text_size, 36f);
+        labelTextSize = array.getDimension(R.styleable.ViewfinderView_label_text_size, 36f);
         array.recycle();
 
         // Initialize these once for performance rather than calling them every time in onDraw().

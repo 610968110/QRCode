@@ -24,6 +24,7 @@
             app:frame_offset="0dp"
             app:label_text="二维码/条形码扫描"
             app:label_text_color="@color/colorAccent"
+            app:label_text_size="10sp"
             app:label_text_position="bottom"
             app:laser_color="@color/laser_color"
             app:mask_color="@color/viewfinder_mask"

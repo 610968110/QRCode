@@ -113,11 +113,14 @@ ViewfinderView是扫码界面中间的方框:
 属性 | 说明
 ------- | ---------
 corner_color |  边角颜色
-scanner_color | 扫描线颜色
-possible_result_color | 扫描点颜色
+laser_color | 扫描线颜色
+result_point_color | 扫描点颜色
 frame_color | 扫描框边线颜色
 mask_color | 模糊区域颜色
-label_text  | 框上方提示
 label_text_position | 文字位置(top/bottom/none)
 frame_offset | 扫描框的上下偏移量
+result_color | 暂时没用
+label_text  | 框上方提示
+label_text_color | 文字颜色
+label_text_size | 文字大小
 
