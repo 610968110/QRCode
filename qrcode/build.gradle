@@ -74,9 +74,9 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 //项目主页--项目的GitHub地址
-def siteUrl = 'https://github.com/610968110/QRManager'
+def siteUrl = 'https://github.com/610968110/QRCode'
 //项目的git地址
-def gitUrl = 'https://github.com/610968110/QRManager.git'
+def gitUrl = 'https://github.com/610968110/QRCode.git'
 //compile引用时的第1部分
 group = "com.lbx"
 //项目名
