@@ -1,0 +1,71 @@
+apply plugin: 'me.tatarka.retrolambda'
+apply plugin: 'com.android.application'
+apply plugin: 'android-apt'
+apply plugin: 'com.jakewharton.butterknife'
+
+android {
+    def android = rootProject.ext;
+    compileSdkVersion android.compileSdkVersion
+    buildToolsVersion android.buildToolsVersion
+    defaultConfig {
+        applicationId "lbx.com.qrcodelib"
+        minSdkVersion android.minSdkVersion
+        targetSdkVersion android.targetSdkVersion
+        versionCode android.versionCode
+        versionName android.versionName
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        //ndk {
+        //    // 设置支持的SO库架构
+        //    abiFilters 'armeabi'// , 'x86', 'armeabi-v7a', 'x86_64', 'arm64-v8a'
+        //}
+        multiDexEnabled true
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    dexOptions {
+        jumboMode true
+        preDexLibraries true
+        maxProcessCount 8
+        javaMaxHeapSize "2048m"
+    }
+    dataBinding {
+        enabled = true
+    }
+    lintOptions {
+        //不在error情况下中断
+
+        abortOnError false
+        //无视字符串缺少本地化的情况
+        disable 'MissingTranslation'
+        //无视多做了本地化的字符串
+        disable 'ExtraTranslation'
+    }
+}
+
+repositories {
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+dependencies {
+    compile fileTree(include: ['*.jar'], dir: 'libs')
+    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    })
+    compile 'com.android.support:appcompat-v7:26.+'
+    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    testCompile 'junit:junit:4.12'
+    compile project(':qrcode')
+//    compile 'com.lbx:qrcode:1.0.0'
+    compile 'com.jakewharton:butterknife:8.2.1'
+    apt 'com.jakewharton:butterknife-compiler:8.2.1'
+}
