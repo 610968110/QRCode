@@ -29,6 +29,7 @@ import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.Shader;
 import android.graphics.SweepGradient;
+import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
 
@@ -42,11 +43,28 @@ import lbx.qrcode.google.zxing.camera.CameraManager;
 
 
 /**
- * This view is overlaid on top of the camera preview. It adds the viewfinder rectangle and partial
- * transparency outside it, as well as the laser scanner animation and result points.
- * �Զ����View������ʱ�м���ʾ��
+ * .  ┏┓　　　┏┓
+ * .┏┛┻━━━┛┻┓
+ * .┃　　　　　　　┃
+ * .┃　　　━　　　┃
+ * .┃　┳┛　┗┳　┃
+ * .┃　　　　　　　┃
+ * .┃　　　┻　　　┃
+ * .┃　　　　　　　┃
+ * .┗━┓　　　┏━┛
+ * .    ┃　　　┃        神兽保佑
+ * .    ┃　　　┃          代码无BUG!
+ * .    ┃　　　┗━━━┓
+ * .    ┃　　　　　　　┣┓
+ * .    ┃　　　　　　　┏┛
+ * .    ┗┓┓┏━┳┓┏┛
+ * .      ┃┫┫　┃┫┫
+ * .      ┗┻┛　┗┻┛
+ *
+ * @author lbx
+ * @date 2018/8/19
  */
-public final class ViewfinderView extends View {
+public class ViewfinderView extends View {
 
     private static final int[] SCANNER_ALPHA = {0, 64, 128, 192, 255, 192, 128, 64};
     private static final long ANIMATION_DELAY = 10L;
@@ -112,9 +130,16 @@ public final class ViewfinderView extends View {
     private Collection<ResultPoint> lastPossibleResultPoints;
     private int mFrameOffset;
 
-    public ViewfinderView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+    public ViewfinderView(Context context) {
+        this(context, null);
+    }
 
+    public ViewfinderView(Context context, AttributeSet attrs) {
+        this(context, attrs, 0);
+    }
+
+    public ViewfinderView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
         //初始化自定义属性信息
         TypedArray array = context.obtainStyledAttributes(attrs, R.styleable.ViewfinderView);
         laserColor = array.getColor(R.styleable.ViewfinderView_laser_color, 0x00FF00);
@@ -129,8 +154,6 @@ public final class ViewfinderView extends View {
         mFrameOffset = (int) array.getDimension(R.styleable.ViewfinderView_frame_offset, 0);
         labelTextSize = array.getDimension(R.styleable.ViewfinderView_label_text_size, 36f);
         array.recycle();
-
-        // Initialize these once for performance rather than calling them every time in onDraw().
         paint = new Paint();
         paint.setAntiAlias(true);
         scannerAlpha = 0;
@@ -139,7 +162,7 @@ public final class ViewfinderView extends View {
 
     @Override
     public void onDraw(Canvas canvas) {
-        int offset = 0;
+        int offset;
         if (labelTextPosition == 1) {
             offset = mFrameOffset - 100;
         } else {
@@ -156,22 +179,19 @@ public final class ViewfinderView extends View {
 
         int width = canvas.getWidth();
         int height = canvas.getHeight();
-        // Draw the exterior (i.e. outside the framing rect) darkened
         drawExterior(canvas, frame, width, height);
 
 
         if (resultBitmap != null) {
-            // Draw the opaque result bitmap over the scanning rectangle
             paint.setAlpha(OPAQUE);
             canvas.drawBitmap(resultBitmap, frame.left, frame.top, paint);
         } else {
-            // Draw a two pixel solid black border inside the framing rect
             drawFrame(canvas, frame);
             // 绘制边角
             drawCorner(canvas, frame);
             //绘制提示信息
             drawTextInfo(canvas, frame);
-            // Draw a red "laser scanner" line through the middle to show decoding is active
+            //绘制扫描线
             drawLaserScanner(canvas, frame);
 
             Collection<ResultPoint> currentPossible = possibleResultPoints;
@@ -179,7 +199,7 @@ public final class ViewfinderView extends View {
             if (currentPossible.isEmpty()) {
                 lastPossibleResultPoints = null;
             } else {
-                possibleResultPoints = new HashSet<>(5);
+                possibleResultPoints.clear();
                 lastPossibleResultPoints = currentPossible;
                 paint.setAlpha(OPAQUE);
                 paint.setColor(resultPointColor);
@@ -194,16 +214,18 @@ public final class ViewfinderView extends View {
                     canvas.drawCircle(frame.left + point.getX(), frame.top + point.getY(), 3.0f, paint);
                 }
             }
-
-            // Request another update at the animation interval, but only repaint the laser line,
-            // not the entire viewfinder mask.
             //指定重绘区域，该方法会在子线程中执行
             postInvalidateDelayed(ANIMATION_DELAY, frame.left, frame.top, frame.right, frame.bottom);
         }
     }
 
-    //绘制文本
-    private void drawTextInfo(Canvas canvas, Rect frame) {
+    /**
+     * 绘制文本
+     *
+     * @param canvas canvas
+     * @param frame  frame
+     */
+    public void drawTextInfo(Canvas canvas, Rect frame) {
         paint.setColor(labelTextColor);
         paint.setTextSize(labelTextSize);
         paint.setTextAlign(Paint.Align.CENTER);
@@ -214,9 +236,13 @@ public final class ViewfinderView extends View {
         }
     }
 
-
-    //绘制边角
-    private void drawCorner(Canvas canvas, Rect frame) {
+    /**
+     * 绘制边角
+     *
+     * @param canvas canvas
+     * @param frame  frame
+     */
+    public void drawCorner(Canvas canvas, Rect frame) {
         paint.setColor(cornerColor);
         //左上
         canvas.drawRect(frame.left, frame.top, frame.left + CORNER_RECT_WIDTH, frame.top + CORNER_RECT_HEIGHT, paint);
@@ -232,14 +258,22 @@ public final class ViewfinderView extends View {
         canvas.drawRect(frame.right - CORNER_RECT_HEIGHT, frame.bottom - CORNER_RECT_WIDTH, frame.right, frame.bottom, paint);
     }
 
-    //绘制扫描线
-    private void drawLaserScanner(Canvas canvas, Rect frame) {
+
+    /**
+     * 绘制扫描线
+     *
+     * @param canvas canvas
+     * @param frame  frame
+     */
+    public void drawLaserScanner(Canvas canvas, Rect frame) {
         paint.setColor(laserColor);
+
         //扫描线闪烁效果
-//    paint.setAlpha(SCANNER_ALPHA[scannerAlpha]);
-//    scannerAlpha = (scannerAlpha + 1) % SCANNER_ALPHA.length;
-//    int middle = frame.height() / 2 + frame.top;
-//    canvas.drawRect(frame.left + 2, middle - 1, frame.right - 1, middle + 2, paint);
+//        paint.setAlpha(SCANNER_ALPHA[scannerAlpha]);
+//        scannerAlpha = (scannerAlpha + 1) % SCANNER_ALPHA.length;
+//        int middle = frame.height() / 2 + frame.top;
+//        canvas.drawRect(frame.left + 2, middle - 1, frame.right - 1, middle + 2, paint);
+
         //线性渐变
         LinearGradient linearGradient = new LinearGradient(
                 frame.left, scannerStart,
@@ -267,7 +301,7 @@ public final class ViewfinderView extends View {
         paint.setShader(radialGradient);
         if (scannerStart <= scannerEnd) {
             //矩形
-//      canvas.drawRect(frame.left, scannerStart, frame.right, scannerStart + SCANNER_LINE_HEIGHT, paint);
+            canvas.drawRect(frame.left, scannerStart, frame.right, scannerStart + SCANNER_LINE_HEIGHT, paint);
             //椭圆
             RectF rectF = new RectF(frame.left + 2 * SCANNER_LINE_HEIGHT, scannerStart, frame.right - 2 * SCANNER_LINE_HEIGHT, scannerStart + SCANNER_LINE_HEIGHT);
             canvas.drawOval(rectF, paint);
@@ -278,15 +312,30 @@ public final class ViewfinderView extends View {
         paint.setShader(null);
     }
 
-    //处理颜色模糊
+    public Paint getPaint() {
+        return paint;
+    }
+
+    /**
+     * 处理颜色模糊
+     *
+     * @param color color
+     * @return return
+     */
     public int shadeColor(int color) {
         String hax = Integer.toHexString(color);
         String result = "20" + hax.substring(2);
         return Integer.valueOf(result, 16);
     }
 
-    // 绘制扫描区边框 Draw a two pixel solid black border inside the framing rect
-    private void drawFrame(Canvas canvas, Rect frame) {
+
+    /**
+     * 绘制扫描区边框
+     *
+     * @param canvas canvas
+     * @param frame  frame
+     */
+    public void drawFrame(Canvas canvas, Rect frame) {
         paint.setColor(frameColor);
         canvas.drawRect(frame.left, frame.top, frame.right + 1, frame.top + 2, paint);
         canvas.drawRect(frame.left, frame.top + 2, frame.left + 2, frame.bottom - 1, paint);
@@ -294,8 +343,16 @@ public final class ViewfinderView extends View {
         canvas.drawRect(frame.left, frame.bottom - 1, frame.right + 1, frame.bottom + 1, paint);
     }
 
-    // 绘制模糊区域 Draw the exterior (i.e. outside the framing rect) darkened
-    private void drawExterior(Canvas canvas, Rect frame, int width, int height) {
+
+    /**
+     * 绘制模糊区域
+     *
+     * @param canvas canvas
+     * @param frame  frame
+     * @param width  width
+     * @param height height
+     */
+    public void drawExterior(Canvas canvas, Rect frame, int width, int height) {
         paint.setColor(resultBitmap != null ? resultColor : maskColor);
         canvas.drawRect(0, 0, width, frame.top, paint);
         canvas.drawRect(0, frame.top, frame.left, frame.bottom + 1, paint);
@@ -308,11 +365,6 @@ public final class ViewfinderView extends View {
         invalidate();
     }
 
-    /**
-     * Draw a bitmap with the result points highlighted instead of the live scanning display.
-     *
-     * @param barcode An image of the decoded barcode.
-     */
     public void drawResultBitmap(Bitmap barcode) {
         resultBitmap = barcode;
         invalidate();
